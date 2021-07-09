@@ -123,7 +123,7 @@ def run():
             pass
 
         cv2.imshow("Gesture", frame)
-        all_image = np.hstack((drawing, crop_image))
+        # all_image = np.hstack((drawing, crop_image))
         # cv2.imshow('Contours', all_image)
 
         k = cv2.waitKey(1)

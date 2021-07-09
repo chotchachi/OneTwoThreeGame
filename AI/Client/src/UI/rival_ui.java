@@ -71,7 +71,7 @@ public class rival_ui extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btn_playActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_playActionPerformed
-        this.initcall("request_call"); // khởi tạo với chế độ yêu cầu
+        this.initcall("request_game"); // khởi tạo với chế độ yêu cầu
     }//GEN-LAST:event_btn_playActionPerformed
 
    
@@ -108,7 +108,7 @@ public class rival_ui extends javax.swing.JFrame {
             Logger.getLogger(rival_ui.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        if (mode.equalsIgnoreCase("respon_call")) {
+        if (mode.equalsIgnoreCase("respon_game")) {
             try {
                 // nếu chấp chận thì khởi tạo phần thu âm
                 ChatClient.inviteUI.init_recorder(InetAddress.getByName(this.data_from_server[2]), Integer.valueOf(this.data_from_server[3]));

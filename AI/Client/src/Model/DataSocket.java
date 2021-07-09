@@ -11,6 +11,8 @@ public class DataSocket implements Serializable{
     public boolean accept = false;
     public User user;
     public List<User> userList;
+    public User nguoiGui;
+    public User nguoiNhan;
 
     public DataSocket(){
         
@@ -70,5 +72,19 @@ public class DataSocket implements Serializable{
         this.userList = userList;
     }
     
+    public User getNguoiNhan() {
+        return nguoiNhan;
+    }
     
+    public void setNguoiNhan(User user) {
+        this.nguoiNhan = user;
+    }
+    
+    public User getNguoiGui() {
+        return nguoiGui;
+    }
+    
+    public void setNguoiGui(User user) {
+        this.nguoiGui = user;
+    }
 }

@@ -11,7 +11,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,14 +46,23 @@ public class Receive extends Thread {
                     case "loaduser":
                         showUser(respon.getUserList());
                         break;
+                    case "respon_game":
+                        responGame(respon);
+                        break;
+                    case "request_game":
+                        requestGame(respon);
+                        break;
+                    case "sendfinger":
+                        receiveFinger(respon);
+                        break;
                     case "respon_call":
                         responCall(respon);
                         break;
                     case "request_call":
                         requestCall(respon);
                         break;
-                    case "sendfinger":
-                        receiveFinger(respon);
+                    case "endcall":
+                        endCall(respon);
                         break;
                     default:
                         System.out.println("Unknow action");
@@ -65,7 +76,7 @@ public class Receive extends Thread {
 
     }
 
-    public void requestCall(DataSocket data) {
+    private void requestGame(DataSocket data) {
         System.out.println("Đã nhận yêu cầu chơi từ " + data.data[0]);
 
         if (ChatClient.playing) { // client đang chơi
@@ -87,13 +98,13 @@ public class Receive extends Thread {
             }
         } else {
             ChatClient.myRivalUserName = data.data[0];
-            ChatClient.app_main_ui.showcallnotify(data.data[0]);
+            ChatClient.app_main_ui.showGameNotify(data.data[0]);
             ChatClient.app_main_ui.data_from_server = data.data;
             ChatClient.playing = true;
         }
     }
 
-    public void responCall(DataSocket data) {
+    private void responGame(DataSocket data) {
         System.out.println(data.data[0] + " đã phản hồi yêu cầu");
 
         // Từ chối
@@ -119,7 +130,7 @@ public class Receive extends Thread {
         }
     }
 
-    public void loadUser() throws IOException {
+    private void loadUser() throws IOException {
         ChatClient.login = true;
 
         ChatClient.app_main_ui.setVisible(true);
@@ -133,7 +144,7 @@ public class Receive extends Thread {
         objectOutputStream.writeObject(dtsk);
     }
 
-    public void showUser(List<User> data) {
+    private void showUser(List<User> data) {
         ChatClient.userList.clear();
         DefaultListModel<User> defaultListModel = new DefaultListModel<>();
         
@@ -148,7 +159,7 @@ public class Receive extends Thread {
         app_main_ui.list_user.setCellRenderer(new item_user_list());
     }
     
-    public void receiveFinger(DataSocket data){
+    private void receiveFinger(DataSocket data){
         int rivalFinger = Integer.parseInt(data.data[2]);
         int myFinger = ChatClient.OTT.fingerValue;
         
@@ -208,5 +219,54 @@ public class Receive extends Thread {
         resultUI.txt_ketqua.setText("Bạn hòa!");
         resultUI.img_result.setIcon(new ImageIcon(new ImageIcon(getClass().getClassLoader().getResource("image/hoa.jpg")).getImage().getScaledInstance(300, 300, Image.SCALE_DEFAULT)));
         resultUI.setVisible(true);
+    }
+    
+    private void requestCall(DataSocket data) {
+        System.out.println("Đã nhận yêu cầu cuộc gọi");
+        ChatClient.nguoiNhan = data.getNguoiGui();
+        if (ChatClient.playing) { // client đang thực hiện cuộc gọi 
+            
+        } else {
+            ChatClient.myRivalUserName = data.data[0];
+            ChatClient.app_main_ui.showCallNotify(data.data[0]);
+            ChatClient.app_main_ui.data_from_server = data.data;
+            ChatClient.playing = true;
+        }
+    }
+
+    private void responCall(DataSocket data) throws UnknownHostException {
+        System.out.println(data.getNguoiGui().getUserName()+" đã gửi phản hồi yêu cầu");
+        
+        // Từ chối
+        if (!data.isAccept()) {
+            if(ChatClient.callUI != null){
+                try {
+                    ChatClient.callUI.lb_status.setText("Đã từ chối");
+                    Thread.sleep(2000);
+                    ChatClient.callUI.setVisible(false);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            ChatClient.nguoiNhan = null;
+            ChatClient.playing = false;
+        // Đồng ý    
+        } else {
+            ChatClient.callUI.lb_status.setText("Đã kết nối");
+            ChatClient.callUI.init_recorder(InetAddress.getByName(data.getData()[0]), Integer.valueOf(data.getData()[1]));
+        }
+    }
+    
+    private void endCall(DataSocket respon) {
+        if(respon.getNguoiGui().getUserName().equals(ChatClient.nguoiNhan.getUserName())){
+            ChatClient.playing = false;
+            if(ChatClient.app_main_ui.clip != null){
+                ChatClient.app_main_ui.clip.stop();
+            }
+            if(ChatClient.callUI != null){
+                ChatClient.callUI.setVisible(false);
+            }
+            
+        }
     }
 }

@@ -95,7 +95,7 @@ public class notify_ui extends javax.swing.JFrame {
     private void btn_acceptActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_acceptActionPerformed
         this.dispose();
         ChatClient.app_main_ui.clip.stop();
-        ChatClient.app_main_ui.acceptPlay("respon_call");
+        ChatClient.app_main_ui.acceptPlay("respon_game");
         this.setVisible(false);
     }//GEN-LAST:event_btn_acceptActionPerformed
 

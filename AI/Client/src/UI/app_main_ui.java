@@ -20,6 +20,7 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.swing.JOptionPane;
 
 public class app_main_ui extends javax.swing.JFrame {
 
@@ -100,7 +101,7 @@ public class app_main_ui extends javax.swing.JFrame {
     private void list_userMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_list_userMouseClicked
         // TODO add your handling code here:
         if (evt.getClickCount() == 2) {
-            this.play(list_user.getSelectedIndex());
+            this.call(list_user.getSelectedIndex());
         }
     }//GEN-LAST:event_list_userMouseClicked
 
@@ -124,7 +125,7 @@ public class app_main_ui extends javax.swing.JFrame {
         User user = ChatClient.userList.get(index);
         ChatClient.myRivalUserName = user.getUserName();
 
-        sendLoiMoi("request_call");
+        sendLoiMoi("request_game");
     }
 
     public void sendLoiMoi(String mode) {
@@ -161,7 +162,7 @@ public class app_main_ui extends javax.swing.JFrame {
         }
     }
 
-    public void showcallnotify(String rivalUserName) {
+    public void showGameNotify(String rivalUserName) {
         System.out.println("Showcallnotify");
         notify_ui notifyUI = new notify_ui();
         notifyUI.setTitle(rivalUserName);
@@ -194,7 +195,7 @@ public class app_main_ui extends javax.swing.JFrame {
 
     public void deniedPlay() {
         DataSocket dtsk = new DataSocket();
-        dtsk.action = "respon_call";
+        dtsk.action = "respon_game";
         String[] data = new String[3];
         data[0] = String.valueOf(ChatClient.myUserName);
         data[1] = String.valueOf(ChatClient.myRivalUserName);
@@ -231,11 +232,85 @@ public class app_main_ui extends javax.swing.JFrame {
             Logger.getLogger(app_main_ui.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        if (mode.equalsIgnoreCase("respon_call")) {
+        if (mode.equalsIgnoreCase("respon_game")) {
             if (ChatClient.OTT != null) {
                 ChatClient.OTT.setVisible(true);
                 ChatClient.OTT.startCount();
             }
+        }
+    }
+
+    public void call(int index) {
+        User user = ChatClient.userList.get(index);
+        ChatClient.myRivalUserName = user.getUserName();
+        ChatClient.nguoiNhan = user;
+
+        init_call("request_call");
+    }
+
+    public void init_call(String mode) {
+        ChatClient.callUI.init_audio();
+        ChatClient.callUI.init_player();
+
+        int x, y;
+        x = this.getLocation().x + this.getWidth();
+        y = this.getLocation().y;
+        if (x + ChatClient.callUI.getWidth() > dim.width) {
+            x = this.getLocation().x - ChatClient.callUI.getWidth();
+        }
+        ChatClient.callUI.setLocation(x, y);
+        ChatClient.callUI.setVisible(true);
+
+        DataSocket dtsk = new DataSocket();
+        dtsk.setAction(mode);
+        dtsk.setAccept(true);
+        dtsk.setNguoiGui(ChatClient.isMe);
+        dtsk.setNguoiNhan(ChatClient.nguoiNhan);
+        String data[] = new String[2];
+        data[0] = ChatClient.myIP;
+        data[1] = String.valueOf(ChatClient.myPort);
+        dtsk.setData(data);
+        ObjectOutputStream dout;
+        try {
+            dout = new ObjectOutputStream(ChatClient.socket.getOutputStream());
+            dout.writeObject(dtsk);
+        } catch (IOException ex) {
+            Logger.getLogger(app_main_ui.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        if (mode.equals("respon_call")) {
+            try {
+                // nếu chấp chận thì khởi tạo phần thu âm
+                ChatClient.callUI.init_recorder(InetAddress.getByName(this.data_from_server[0]), Integer.valueOf(this.data_from_server[1]));
+                ChatClient.callUI.lb_status.setText("Đã kết nối");
+            } catch (UnknownHostException ex) {
+                Logger.getLogger(app_main_ui.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void showCallNotify(String rivalUserName) {
+        call_notify_ui notifyUI = new call_notify_ui();
+        notifyUI.setTitle(rivalUserName);
+        notifyUI.txt_tennguoigoi.setText(rivalUserName);
+        notifyUI.setLocation(dim.width / 2 - notifyUI.getWidth() / 2, dim.height / 2 - notifyUI.getHeight() / 2);
+        notifyUI.setVisible(true);
+        this.clip = this.playsound("ringer.wav");
+        this.clip.start();
+    }
+
+    public void tuchoi() {
+        DataSocket dtsk = new DataSocket();
+        dtsk.setAction("respon_call");
+        dtsk.setNguoiGui(ChatClient.isMe);
+        dtsk.setNguoiNhan(ChatClient.nguoiNhan);
+        dtsk.setAccept(false);
+        try {
+            ObjectOutputStream dout = new ObjectOutputStream(ChatClient.socket.getOutputStream());
+            dout.writeObject(dtsk);
+            System.out.println("Đã gửi phản hồi: từ chối");
+        } catch (IOException ex) {
+
         }
     }
 
